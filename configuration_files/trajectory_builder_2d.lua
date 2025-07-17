@@ -13,12 +13,12 @@
 -- limitations under the License.
 
 TRAJECTORY_BUILDER_2D = {
-  use_imu_data = true,
-  min_range = 0.,
-  max_range = 30.,
+  use_imu_data = true,  -- 是否使用IMU数据
+  min_range = 0.,       -- 深度数据最小范围
+  max_range = 30.,      -- 深度数据最大范围
   min_z = -0.8,
   max_z = 2.,
-  missing_data_ray_length = 5.,
+  missing_data_ray_length = 5.,    -- 传感器数据超出有效范围最大值时，按此值来处理
   num_accumulated_range_data = 1,
   voxel_filter_size = 0.025,
 
@@ -34,7 +34,7 @@ TRAJECTORY_BUILDER_2D = {
     max_range = 50.,
   },
 
-  use_online_correlative_scan_matching = false,
+  use_online_correlative_scan_matching = false,    -- 是否使用实时回环检测来进行前端的扫描匹配
   real_time_correlative_scan_matcher = {
     linear_search_window = 0.1,
     angular_search_window = math.rad(20.),
@@ -53,10 +53,10 @@ TRAJECTORY_BUILDER_2D = {
     },
   },
 
-  motion_filter = {
+  motion_filter = {  
     max_time_seconds = 5.,
     max_distance_meters = 0.2,
-    max_angle_radians = math.rad(1.),
+    max_angle_radians = math.rad(1.),-- 运动过滤，检测运动变化，避免机器人静止时插入数据
   },
 
   -- TODO(schwoere,wohe): Remove this constant. This is only kept for ROS.

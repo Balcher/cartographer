@@ -36,7 +36,31 @@ if(WIN32)
   set(Boost_USE_STATIC_LIBS FALSE)
 endif()
 find_package(Boost REQUIRED COMPONENTS ${BOOST_COMPONENTS})
-find_package(Ceres REQUIRED COMPONENTS SuiteSparse)
+
+# 设置 Ceres 库的安装路径
+set(CERES_INCLUDE_DIR "/usr/include/ceres")
+set(CERES_LIBRARY_DIR "/usr/lib/x86_64-linux-gnu")
+
+# 设置 SuiteSparse 库的安装路径
+set(SUITESPARSE_INCLUDE_DIR "/usr/include/suitesparse")
+set(SUITESPARSE_LIBRARY_DIR "/usr/lib/x86_64-linux-gnu")
+
+# 设置 SuiteSparse 库的链接选项
+set(SUITESPARSE_LIBRARIES
+    "-lsuitesparseconfig -lamd -lcamd -lcolamd -lccolamd -lsuitesparse_wrapper -lspqr -lbtf -ludti")
+
+# 添加 Ceres 和 SuiteSparse 库的搜索路径
+include_directories(${CERES_INCLUDE_DIR} ${SUITESPARSE_INCLUDE_DIR})
+link_directories(${CERES_LIBRARY_DIR} ${SUITESPARSE_LIBRARY_DIR})
+
+# 查找和链接 Ceres 库
+find_package(Ceres REQUIRED)
+if(CERES_FOUND)
+  include_directories(${CERES_INCLUDE_DIRS})
+#   target_link_libraries(your_target_name ${CERES_LIBRARIES} ${SUITESPARSE_LIBRARIES})
+endif()
+
+# find_package(Ceres REQUIRED COMPONENTS SuiteSparse)
 find_package(Eigen3 REQUIRED)
 find_package(Lua REQUIRED)
 if(WIN32)
@@ -217,6 +241,7 @@ if(${BUILD_GRPC})
   )
   target_link_libraries(cartographer_grpc_server PUBLIC grpc++)
   target_link_libraries(cartographer_grpc_server PUBLIC async_grpc)
+  target_link_libraries(cartographer_grpc_server PUBLIC ${LUA_LIBRARIES}) # 添加 Lua 库链接
   if(${BUILD_PROMETHEUS})
     target_link_libraries(cartographer_grpc_server PUBLIC ${ZLIB_LIBRARIES})
     target_link_libraries(cartographer_grpc_server PUBLIC prometheus-cpp-core)
