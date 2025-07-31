@@ -39,6 +39,8 @@ namespace mapping {
 proto::MapBuilderOptions CreateMapBuilderOptions(
     common::LuaParameterDictionary* const parameter_dictionary);
 
+
+// 用于构建和管理SLAM系统中的轨迹构建器的接口。
 // This interface is used for both library and RPC implementations.
 // Implementations wire up the complete SLAM stack.
 class MapBuilderInterface {
@@ -55,6 +57,7 @@ class MapBuilderInterface {
   MapBuilderInterface& operator=(const MapBuilderInterface&) = delete;
 
   // Creates a new trajectory builder and returns its index.
+  // 创建一个TrajectoryBuilder并返回他的index，即trajectory_id
   virtual int AddTrajectoryBuilder(
       const std::set<SensorId>& expected_sensor_ids,
       const proto::TrajectoryBuilderOptions& trajectory_options,
@@ -62,6 +65,7 @@ class MapBuilderInterface {
 
   // Creates a new trajectory and returns its index. Querying the trajectory
   // builder for it will return 'nullptr'.
+  //   这个函数的作用是从一个序列化的数据中构造出一个trajectory 并返回他的index
   virtual int AddTrajectoryForDeserialization(
       const proto::TrajectoryBuilderOptionsWithSensorIds&
           options_with_sensor_ids_proto) = 0;
@@ -69,15 +73,20 @@ class MapBuilderInterface {
   // Returns the 'TrajectoryBuilderInterface' corresponding to the specified
   // 'trajectory_id' or 'nullptr' if the trajectory has no corresponding
   // builder.
+  //   根据trajectory_id返回对应的TrajectoryBuilderInterface指针
+  // 如果 trajectory_id没有对应的builder，则返回nullptr
   virtual mapping::TrajectoryBuilderInterface* GetTrajectoryBuilder(
       int trajectory_id) const = 0;
 
   // Marks the TrajectoryBuilder corresponding to 'trajectory_id' as finished,
   // i.e. no further sensor data is expected.
+  //   finish 指定 id 的trajectory
   virtual void FinishTrajectory(int trajectory_id) = 0;
 
   // Fills the SubmapQuery::Response corresponding to 'submap_id'. Returns an
   // error string on failure, or an empty string on success.
+  //   根据指定的submap_id填充SubmapQuery::Response
+  // 如果成功则返回空字符串，失败则返回错误信息
   virtual std::string SubmapToProto(const SubmapId& submap_id,
                                     proto::SubmapQuery::Response* response) = 0;
 
@@ -85,6 +94,10 @@ class MapBuilderInterface {
   // 'include_unfinished_submaps' is set to true, unfinished submaps, i.e.
   // submaps that have not yet received all rangefinder data insertions, will
   // be included in the serialized state.
+  //   将当前状态序列化为 proto
+  //   流，如果将"include_unfinished_submaps"设置为true，
+  // 则未完成的子图（即尚未接收所有测距仪数据插入的子图）将包含在序列化状态中。
+  // 'writer'
   virtual void SerializeState(bool include_unfinished_submaps,
                               io::ProtoStreamWriterInterface* writer) = 0;
 
@@ -93,23 +106,32 @@ class MapBuilderInterface {
   // submaps that have not yet received all rangefinder data insertions, will
   // be included in the serialized state.
   // Returns true if the file was successfully written.
+  //   将当前状态序列化为主机系统上的proto流文件。
+  // 如果将"include_unfinished_submaps"设置为true，
+  // 则未完成的子图（即尚未接收所有测距仪数据插入的子图）将包含在序列化状态中。
+  // 如果文件成功写入，则返回true。
   virtual bool SerializeStateToFile(bool include_unfinished_submaps,
                                     const std::string& filename) = 0;
 
   // Loads the SLAM state from a proto stream. Returns the remapping of new
   // trajectory_ids.
+  //  从proto流加载SLAM状态。返回新的trajectory_ids的重映射。
   virtual std::map<int /* trajectory id in proto */, int /* trajectory id */>
   LoadState(io::ProtoStreamReaderInterface* reader, bool load_frozen_state) = 0;
 
   // Loads the SLAM state from a pbstream file. Returns the remapping of new
   // trajectory_ids.
+  // 从pbstream文件加载SLAM状态。返回新的trajectory_ids的重映射。
   virtual std::map<int /* trajectory id in proto */, int /* trajectory id */>
   LoadStateFromFile(const std::string& filename, bool load_frozen_state) = 0;
 
+  // 返回系统中当前已有的trajectory_builder的数量
   virtual int num_trajectory_builders() const = 0;
 
+  // 返回一个poseGraphInterface的接口指针
   virtual mapping::PoseGraphInterface* pose_graph() = 0;
 
+  // 获取所有trajectoryBuilderB的配置项。
   virtual const std::vector<proto::TrajectoryBuilderOptionsWithSensorIds>&
   GetAllTrajectoryBuilderOptions() const = 0;
 };

@@ -36,6 +36,7 @@
 namespace cartographer {
 namespace mapping {
 
+// 该函数用于根据给定的Lua参数字典创建轨迹构建器选项
 proto::TrajectoryBuilderOptions CreateTrajectoryBuilderOptions(
     common::LuaParameterDictionary* const parameter_dictionary);
 
@@ -47,39 +48,47 @@ class LocalSlamResultData;
 // optimized pose estimates.
 class TrajectoryBuilderInterface {
  public:
+  //  插入的结果信息
   struct InsertionResult {
-    NodeId node_id;
-    std::shared_ptr<const TrajectoryNode::Data> constant_data;
-    std::vector<std::shared_ptr<const Submap>> insertion_submaps;
+    NodeId node_id;  // 节点ID
+    std::shared_ptr<const TrajectoryNode::Data>
+        constant_data;  // 常量数据的共享指针
+    std::vector<std::shared_ptr<const Submap>>
+        insertion_submaps;  // 插入的子图列表
   };
 
   // A callback which is called after local SLAM processes an accumulated
   // 'sensor::RangeData'. If the data was inserted into a submap, reports the
   // assigned 'NodeId', otherwise 'nullptr' if the data was filtered out.
+  // 定义一个回调函数类型，用于处理局部SLAM处理后的结果，主要用于报告传感器数据的插入情况。
   using LocalSlamResultCallback =
       std::function<void(int /* trajectory ID */, common::Time,
                          transform::Rigid3d /* local pose estimate */,
                          sensor::RangeData /* in local frame */,
                          std::unique_ptr<const InsertionResult>)>;
 
+  //  定义了传感器的类型和ID
   struct SensorId {
+    // 传感器类型的枚举类
     enum class SensorType {
-      RANGE = 0,
-      IMU,
-      ODOMETRY,
-      FIXED_FRAME_POSE,
-      LANDMARK,
-      LOCAL_SLAM_RESULT
+      RANGE = 0,         // 激光雷达传感器
+      IMU,               // 惯性测量单元传感器
+      ODOMETRY,          // 里程计传感器
+      FIXED_FRAME_POSE,  // 固定框架姿态传感器
+      LANDMARK,          // 地标传感器
+      LOCAL_SLAM_RESULT  // 局部SLAM结果传感器
     };
 
-    SensorType type;
-    std::string id;
+    SensorType type;  // 传感器类型
+    std::string id;   // 传感器ID
 
+    // 运算符重载，用于比较两个传感器ID是否相等
     bool operator==(const SensorId& other) const {
       return std::forward_as_tuple(type, id) ==
              std::forward_as_tuple(other.type, other.id);
     }
 
+    // 运算符重载，用于比较两个传感器ID的大小
     bool operator<(const SensorId& other) const {
       return std::forward_as_tuple(type, id) <
              std::forward_as_tuple(other.type, other.id);
@@ -89,10 +98,12 @@ class TrajectoryBuilderInterface {
   TrajectoryBuilderInterface() {}
   virtual ~TrajectoryBuilderInterface() {}
 
-  TrajectoryBuilderInterface(const TrajectoryBuilderInterface&) = delete;
+  TrajectoryBuilderInterface(const TrajectoryBuilderInterface&) =
+      delete;  // 禁止拷贝构造
   TrajectoryBuilderInterface& operator=(const TrajectoryBuilderInterface&) =
-      delete;
+      delete;  // 禁止赋值操作
 
+  // 允许添加不同传感器的数据，包括：时间标记的点云数据、IMU数据、里程计数据、固定框架姿态数据和地标数据。
   virtual void AddSensorData(
       const std::string& sensor_id,
       const sensor::TimedPointCloudData& timed_point_cloud_data) = 0;
@@ -108,6 +119,8 @@ class TrajectoryBuilderInterface {
   // Allows to directly add local SLAM results to the 'PoseGraph'. Note that it
   // is invalid to add local SLAM results for a trajectory that has a
   // 'LocalTrajectoryBuilder2D/3D'.
+  // 该函数允许直接将局部slam结果添加到姿态图中，需要注意的是，如果轨迹已经有
+  // LocalTrajectoryBuilder2D/3D，则不能添加局部slam结果。
   virtual void AddLocalSlamResultData(
       std::unique_ptr<mapping::LocalSlamResultData> local_slam_result_data) = 0;
 };
